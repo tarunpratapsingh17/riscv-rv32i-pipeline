@@ -1,0 +1,15 @@
+# simulation / build output
+sim_build/
+build/
+*.vvp
+*.vcd
+*.log
+
+# riscv-tests checkout (cloned by CI / by hand)
+third_party/
+
+# Python / OS / editor
+__pycache__/
+.DS_Store
+Thumbs.db
+.vscode/

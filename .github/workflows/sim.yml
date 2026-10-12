@@ -1,0 +1,36 @@
+name: simulation
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Icarus Verilog, Verilator and the RISC-V toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog verilator gcc-riscv64-unknown-elf
+
+      - name: Lint (Verilator -Wall)
+        run: |
+          verilator --lint-only -Wall -Irtl --top-module rv32i_core \
+            rtl/rv32i_core.v rtl/rv32i_regfile.v rtl/rv32i_alu.v rtl/rv32i_imm_gen.v \
+            rtl/rv32i_decoder.v rtl/rv32i_hazard_unit.v rtl/rv32i_lsu.v
+
+      - name: Fetch riscv-tests
+        run: |
+          git clone https://github.com/riscv-software-src/riscv-tests third_party/riscv-tests
+          git -C third_party/riscv-tests checkout 7b68f7b91f827f8d94cc1c57ff123752c5c8f704
+
+      - name: Rebuild all test programs from source
+        run: python3 scripts/build_tests.py
+
+      - name: Run all tests (riscv-tests + directed + C programs)
+        run: python3 scripts/run_tests.py
+
+      - name: Fault injection (every planted bug must be caught)
+        run: python3 scripts/fault_injection.py
